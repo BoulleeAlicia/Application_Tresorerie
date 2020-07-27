@@ -1,0 +1,182 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+
+Class Std::exception
+
+Class Erreur {
+#info : string
++<<throw()>> Erreur(message:const std::string &)
++<<const noexcept()>> what(): const char *
++<<throw()>> ~Erreur()
+}
+
+
+class Compte <<abstract>>{
+#nom : string
+#type : enum Type
+#Compte(n: const string&, t:enum Type)
++isFils(const Compte& c) 
++afficher(int profondeur) 
++getNom():string const
++getType():string const
++getTypeCompte() 
++ getSolde ()
++ toString ()
++ existeNom(const string &n)
++ afficher(int profondeur)
+
+}
+
+enum Type {
+actif
+passif
+recette
+depense
+racine
+}
+
+enum TypeCompte {
+virtuel
+reel
+}
+
+class CompteVirtuel {
+-fils : vector<Compte*>
++creerFils(c : Compte*)
++supprimerFils (c : Compte&)
++getTypeCompte() : TypeCompte const
++toString(): string const
++afficher(int profondeur) 
++getFils() : vector<Compte*> const
++getCompteByNom(const string& n) : Compte&
++existeNom(const string &n) : bool const
++ getPere(const Compte& c) : Compte&
++ getSolde() : double const
++isFils(const Compte& c): bool const
++ cloturer(vector<Operation*> &o,Type t) : double
+}
+
+class CompteReel {
+-solde : double
+{method} + crediter(m : double)
+{method} + debiter(m : double)
+{method} + getSolde() :double const
+{method} + getTypeCompte() : TypeCompte
+{method} + toString() : string const
+{method} +afficher(int : profondeur)
+{method} +getCompteByNom(const string& n) : Compte&
+{method} +getPere(const Compte& c) : Compte&
+{method} +existeNom(const string &n): bool const;
+{method}+isFils(const Compte& c): bool const
+}
+
+class Operation {
+-_debit : double
+-_credit : double
+-compte : CompteReel&
+{method} -Operation (d:const double, c:const double, co: const CompteReel&)
+{method} +getDebit(): double const
+{method} +getCredit() : double const
+{method} +getCompte() : CompteReel& const
+{method} +setDebit(double debit)
+{method} +setCredit(double credit) 
+{method} +editer_operation() 
+}
+
+class Transaction {
+-date : date
+-reference : integer
+-memo : string
+-marque : bool
+-operations : vector<Operation*>
+{method} -Transaction (d:const date&, r:integer, me: const string&, o: vector<Operation*>)
+{method} - Transaction(tr: const Transaction&);
+{method} -~Transaction()
+{method} -Ajout_Vector_Operations (transaction: Transaction&, d: double, c: double, CO: CompteReel&):Vector<Operation*>
+{method} - Validation_Vector_Operations(operations: vector <Operation*>): bool
+{method} - Modification_Vector_Operations(transaction: Transaction*)
+{method} - Reverse_Transaction(operations: vector <Operation*>)
+{method} +getDate(): date const
+{method} +getReference(): integer const
+{method} +getMemo(): string const
+{method} +getMarque(): bool const
+{method} +getOperation(): vector<Operation*> const
+{method} +setDate(Date date)
+{method} +setReference(int reference) 
+{method} +setMemo(string memo)
+{method} +setMarque(bool marque) 
+{method} +setOperation(new_operations: vector <Operation*>) 
+}
+
+
+class CompteManager << singleton >>{
+{static} -instance : CompteManager
+{static} -rac: CompterRacine
+-filename: string
+{static}{method} +getInstance():CompteManager&
+getRacine() : CompteRacine& const
+{method} +load()
+{method} +save()
+{method} +creerCompte(p : const string&, tc : TypeCompte) 
+{method} +creerCompte(p :Compte& , n : const string&, t :Type, s:double, tc : TypeCompte);
+{method} +supprimerCompte(c: Compte&) 
+{method} +editerCompte(n : const string&, c : Compte&)
+{method} +deplacerCompte(p : Compte&, c : Compte&)
+{method} +getCompte (n : const string&) : Compte&
+{method} +existeNom(const string &n) : bool const
+{method} + getCompteByNom(const string &n) : Compte&
+{method} + getPere(const Compte& c) : Compte&
+{method} +cloturer()
+{method} +rapprocher(c : const CompteReel&)
+{method} +isRapproche(c : const CompteReel&) : bool
+}
+
+class CompteRacine << singleton >>{
+{static} -instance : CompteRacine
+{static}{method} +getInstance():CompteRacine&
+{method} + getSolde(): double const
+}
+
+class TransactionManager << singleton >> {
+{static}-instance : TransactionManager
+-trans : vector<Transaction*>
+-filename: string
+{static}{method} +getInstance():TransactionManager&
+{method} +getTransaction(r : integer):Transaction*
+{method} +getTransactions(): vector <Transaction*>
+{method} +ajouterTransaction (d:const Date&, r: const integer, m:const string&, o:vector<Operation*>
+{method} +supprimerTransaction (r : integer)
+{method} +editerTransaction (r : integer)
+{method} +afficherTransactions()
+{method} +afficherTransactionsCompte (c :CompteReel&)
+{method} +UsageCompte( CompteReel& c ): bool
+{method} +getTransactionsByCompte(c :const CompteReel&) : vector<Transaction*> 
+{method} +save()
+{method} +load()
+}
+
+Std::exception <|-- Erreur
+Compte <|-- CompteVirtuel
+Compte <|-- CompteReel
+CompteVirtuel <|-- CompteRacine
+
+Compte "*"--* CompteVirtuel
+
+
+CompteManager *-- "1" CompteRacine
+
+
+Operation "*" --* CompteReel
+
+Transaction "1" -- "1..*" Operation : émetteur
+note right on link #white
+
+{XOR}
+
+end note
+Transaction "1" -- "1..*" Operation : récepteur
+
+
+TransactionManager *-- "*" Transaction
+@enduml
